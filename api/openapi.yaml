@@ -1,0 +1,26 @@
+openapi: 3.0.3
+info:
+title: InmoFlow ML API
+version: 0.1.0
+paths:
+/health:
+get:
+summary: Health check
+responses:
+'200':
+description: OK
+/version:
+get:
+summary: Version info
+responses:
+'200':
+description: OK
+content:
+application/json:
+schema:
+type: object
+properties:
+service:
+type: string
+version:
+type: string
