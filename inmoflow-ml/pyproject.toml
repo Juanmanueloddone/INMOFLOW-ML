@@ -1,0 +1,22 @@
+[project]
+name = "inmoflow-ml"
+version = "0.1.0"
+description = "InmoFlow ML service (ranking, clustering, features)"
+requires-python = ">=3.10"
+dependencies = [
+"fastapi~=0.115",
+"uvicorn[standard]~=0.30",
+"pydantic~=2.8",
+"python-dotenv~=1.0",
+]
+
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-q"
+testpaths = ["tests"]
+
+
+[tool.ruff]
+line-length = 100
+select = ["E","F","I"]
