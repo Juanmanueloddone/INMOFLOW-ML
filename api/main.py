@@ -1,47 +1,37 @@
-# api/main.py (añade este bloque al que ya deployaste o reemplaza el /demo por /match)
-from fastapi import FastAPI, APIRouter, Query
-from .schemas import VersionInfo
+# api/main.py
+from fastapi import FastAPI, Query
+from schemas import VersionInfo
 import os
 from supabase import create_client
-from ml.ranking import rank_props_for_buyer
+from ml.matching_demo import run_demo
 
-app = FastAPI(title="InmoFlow ML API", version="0.2.0")
+app = FastAPI(title="InmoFlow ML API", version="0.1.0")
 
 @app.get("/health")
-def health(): return {"status": "ok"}
+def health():
+    return {"status": "ok"}
 
 @app.get("/version", response_model=VersionInfo)
-def version(): return VersionInfo(service="inmoflow-ml", version="0.2.0")
+def version():
+    return VersionInfo(service="inmoflow-ml", version="0.1.0")
 
-router = APIRouter(prefix="/ml", tags=["ml"])
-
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
-sb = create_client(SUPABASE_URL, SUPABASE_KEY)
-
-def _load_props():
-    res = sb.table("propiedades").select("id,nombre,zona_clave,precio,amenities").execute()
-    return res.data or []
-
-def _load_buyers(limit: int = 10):
-    res = sb.table("v_ml_buyers_prefs").select(
-        "comprador_id,comprador_nombre,zona_clave,precio_max,amenities"
-    ).limit(limit).execute()
-    return res.data or []
-
-@router.get("/match")
-def ml_match(top_k: int = Query(10, ge=1, le=100), buyers: int = Query(2, ge=1, le=50)):
+@app.get("/ml/match")
+def match(top_k: int = Query(10), buyers: int = Query(2)):
     """
-    Matching v1 (embeddings + reglas) para N compradores.
-    Respuesta: top_k por comprador con razones.
+    Corre el demo de matching usando embeddings
     """
-    props = _load_props()
-    buyers_data = _load_buyers(limit=buyers)
+    supabase_url = os.environ.get("SUPABASE_URL")
+    supabase_key = os.environ.get("SUPABASE_KEY")
+    supabase = create_client(supabase_url, supabase_key)
 
-    output = []
-    for b in buyers_data:
-        ranked = rank_props_for_buyer(props, b, top_k=top_k)
-        output.append({"comprador_id": b["comprador_id"], "comprador": b["comprador_nombre"], "results": ranked})
-    return {"results": output}
+    # query propiedades y compradores simulados
+    props = supabase.table("propiedades").select(
+        "id, nombre, zona_clave, precio, amenities"
+    ).limit(20).execute().data
 
-app.include_router(router)
+    buyers_prefs = supabase.table("v_ml_buyers_prefs").select(
+        "comprador_id, comprador_nombre, zona_clave, precio_max, amenities"
+    ).limit(buyers).execute().data
+
+    results = run_demo(props, buyers_prefs, top_k=top_k)
+    return {"matches": results}
