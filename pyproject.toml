@@ -20,3 +20,7 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 select = ["E","F","I"]
+
+supabase
+openai
+numpy
