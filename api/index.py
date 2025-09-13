@@ -9,4 +9,6 @@ def health():
 
 @app.get("/version")
 def version():
-    return {"service": "inmoflow_ml", "version": "0.1.0"}
+    return {"service": "inmoflow-ml", "version": "0.1.0"}
+
+# Más adelante acá agregamos /ml/match
