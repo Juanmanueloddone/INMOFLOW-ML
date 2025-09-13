@@ -1,2 +1,6 @@
 def handler(request):
-    return {"status": "ok"}
+    return (
+        200,
+        {"Content-Type": "application/json"},
+        '{"status":"ok"}',
+    )
