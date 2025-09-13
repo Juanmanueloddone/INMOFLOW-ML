@@ -1,20 +1,23 @@
 # api/index.py
-from fastapi import FastAPI
-from typing import List, Dict
+from fastapi import FastAPI, Query
+from pydantic import BaseModel
 
 app = FastAPI(title="InmoFlow ML API", version="0.1.0")
 
 @app.get("/health")
-def health() -> Dict[str, str]:
+def health():
     return {"status": "ok"}
 
-@app.get("/version")
-def version() -> Dict[str, str]:
-    return {"service": "inmoflow-ml", "version": "0.1.0"}
+class VersionInfo(BaseModel):
+    service: str
+    version: str
 
-# demo super simple (luego lo cambiamos por el real)
+@app.get("/version", response_model=VersionInfo)
+def version():
+    return VersionInfo(service="inmoflow-ml", version="0.1.0")
+
+# Stub del endpoint de matching para probar que responde
 @app.get("/ml/match")
-def match(top_k: int = 5, buyers: int = 1) -> Dict[str, object]:
-    dummy = [{"comprador_id": i+1, "propiedad_id": j+1, "score": 0.9 - 0.01*j}
-             for i in range(buyers) for j in range(top_k)]
-    return {"results": dummy}
+def match(top_k: int = Query(10, ge=1, le=100), buyers: int = Query(1, ge=1, le=1000)):
+    # Por ahora devuelve un payload vacío pero válido
+    return {"top_k": top_k, "buyers": buyers, "results": []}
