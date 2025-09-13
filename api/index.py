@@ -1,6 +1,7 @@
+# api/index.py
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI(title="InmoFlow ML API", version="0.1.0")
 
 @app.get("/health")
 def health():
@@ -8,4 +9,4 @@ def health():
 
 @app.get("/version")
 def version():
-    return {"service": "inmoflow-ml", "version": "0.1.0"}
+    return {"service": "inmoflow_ml", "version": "0.1.0"}
