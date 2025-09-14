@@ -1,6 +1,8 @@
-def handler(request):
-    return (
-        200,
-        {"Content-Type": "application/json"},
-        '{"status":"ok"}',
-    )
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+
+app = FastAPI()
+
+@app.get("/")
+async def root():
+    return JSONResponse({"status": "ok"})
