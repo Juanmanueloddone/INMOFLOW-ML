@@ -1,5 +1,8 @@
-import json
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 
-def handler(request):
-    body = {"service": "inmoflow-ml", "version": "0.1.0"}
-    return (200, {"Content-Type": "application/json"}, json.dumps(body))
+app = FastAPI()
+
+@app.get("/")
+async def root():
+    return JSONResponse({"version": "1.0.0"})
