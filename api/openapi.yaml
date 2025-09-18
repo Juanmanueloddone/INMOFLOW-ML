@@ -1,26 +1,214 @@
-openapi: 3.0.3
-info:
-title: InmoFlow ML API
-version: 0.1.0
 paths:
-/health:
-get:
-summary: Health check
-responses:
-'200':
-description: OK
-/version:
-get:
-summary: Version info
-responses:
-'200':
-description: OK
-content:
-application/json:
-schema:
-type: object
-properties:
-service:
-type: string
-version:
-type: string
+  /rank:
+    post:
+      summary: Rank properties for a buyer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RankRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankResponse'
+
+components:
+  schemas:
+    Buyer:
+      type: object
+      required:
+        - comprador_id
+        - comprador_nombre
+        - zona_clave
+        - tipo_propiedad
+        - operacion
+        - moneda
+        - periodicidad
+        - rango_precios
+        - ambientes_min
+        - dormitorios_min
+        - metros_cubiertos_min
+        - metros_descubiertos_min
+        - antiguedad_max
+        - estado_papeles
+        - apto_credito
+        - propiedad_pozo
+        - amenities_deseados
+        - imprescindibles
+        - decision_compra
+        - forma_pago
+        - weights
+      properties:
+        comprador_id: { type: string, format: uuid }
+        comprador_nombre: { type: string }
+        zona_clave: { type: string }              # ej 06|060854|25 de mayo
+        tipo_propiedad:
+          type: string
+          enum: [depto, casa, ph, lote, oficina, local, cochera, campo]
+        operacion:
+          type: string
+          enum: [compra, alquiler]
+        moneda:
+          type: string
+          enum: [usd, ars]
+        periodicidad:
+          type: string
+          enum: [unico, mensual, anual]           # compra = unico
+        rango_precios: { type: string, pattern: "^[\\[\\(][0-9]*,?[0-9]*[\\]\\)]$" }
+        ambientes_min: { type: integer, minimum: 0, default: 0 }
+        dormitorios_min: { type: integer, minimum: 0, default: 0 }
+        metros_cubiertos_min: { type: number, minimum: 0, default: 0 }
+        metros_descubiertos_min: { type: number, minimum: 0, default: 0 }
+        antiguedad_max: { type: integer, minimum: 0, default: 999 }
+        estado_papeles:
+          type: string
+          enum: [ok, observar, a_regularizar]
+        apto_credito: { type: boolean, default: false }
+        propiedad_pozo: { type: boolean, default: false }
+        amenities_deseados:
+          type: array
+          items: { type: string }
+          minItems: 0
+          default: []
+        imprescindibles:
+          type: array
+          items: { type: string }
+          minItems: 0
+          default: []
+        decision_compra: { type: string, default: "cliente" }
+        forma_pago:
+          type: string
+          enum: [contado, permuta, financiacion, combinacion]
+        weights:
+          type: object
+          additionalProperties:
+            type: number
+            minimum: 0
+            maximum: 1
+          default:
+            zona: 1
+            tipo_propiedad: 1
+            operacion: 1
+            precio: 0.9
+            ambientes: 0.6
+            dormitorios: 0.6
+            metros: 0.7
+            estado_inmueble: 0.5
+            estado_papeles: 0.8
+            apto_credito: 0.5
+            amenities: 0.6
+            imprescindibles: 1
+            pozo: 0.5
+
+    Property:
+      type: object
+      required:
+        - id
+        - nombre
+        - zona_clave
+        - tipo_propiedad
+        - operacion
+        - moneda
+        - periodicidad
+        - precio
+        - precio_min
+        - precio_max
+        - ambientes
+        - dormitorios
+        - metros_cubiertos
+        - metros_descubiertos
+        - antiguedad
+        - estado_inmueble
+        - estado_papeles
+        - apto_credito
+        - propiedad_pozo
+        - amenities
+        - imprescindibles
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        zona_clave: { type: string }
+        tipo_propiedad:
+          type: string
+          enum: [depto, casa, ph, lote, oficina, local, cochera, campo]
+        operacion:
+          type: string
+          enum: [venta, alquiler]
+        moneda:
+          type: string
+          enum: [usd, ars]
+        periodicidad:
+          type: string
+          enum: [unico, mensual, anual]           # venta = unico
+        precio: { type: number, minimum: 0, default: 0 }
+        precio_min: { type: number, minimum: 0, default: 0 }
+        precio_max: { type: number, minimum: 0, default: 0 }
+        ambientes: { type: integer, minimum: 0, default: 0 }
+        dormitorios: { type: integer, minimum: 0, default: 0 }
+        metros_cubiertos: { type: number, minimum: 0, default: 0 }
+        metros_descubiertos: { type: number, minimum: 0, default: 0 }
+        antiguedad: { type: integer, minimum: 0, default: 0 }
+        estado_inmueble:
+          type: string
+          enum: [a_refaccionar, bueno, muy_bueno, reciclado, excelente, premium]
+        estado_papeles:
+          type: string
+          enum: [ok, observar, a_regularizar]
+        apto_credito: { type: boolean, default: false }
+        propiedad_pozo: { type: boolean, default: false }
+        amenities:
+          type: array
+          items: { type: string }
+          minItems: 0
+          default: []
+        imprescindibles:
+          type: array
+          items: { type: string }
+          minItems: 0
+          default: []
+        extras:
+          type: object
+          default: {}
+
+    RankRequest:
+      type: object
+      required: [buyer, properties, top_k]
+      properties:
+        buyer: { $ref: '#/components/schemas/Buyer' }
+        properties:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/Property' }
+        top_k: { type: integer, minimum: 1, default: 20 }
+
+    RankItem:
+      type: object
+      required: [comprador_id, comprador_nombre, propiedad_id, propiedad, zona_prop, score, reasons]
+      properties:
+        comprador_id: { type: string, format: uuid }
+        comprador_nombre: { type: string }
+        propiedad_id: { type: string, format: uuid }
+        propiedad: { type: string }
+        zona_prop: { type: string }
+        score: { type: number }
+        reasons:
+          type: object
+          properties:
+            cosine: { type: number }
+            price_factor: { type: number }
+            amenities_factor: { type: number }
+            zona_factor: { type: number }
+            price_gap: { type: number }
+            amenities_overlap: { type: integer }
+
+    RankResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/RankItem' }
