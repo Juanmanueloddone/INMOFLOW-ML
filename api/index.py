@@ -1,21 +1,18 @@
 # api/index.py
 from fastapi import FastAPI
-from pydantic import BaseModel
-import os
 
-app = FastAPI(title="InmoFlow ML API", version="0.1.0")
-
-class VersionInfo(BaseModel):
-    service: str
-    version: str
+app = FastAPI()
 
 @app.get("/health")
 def health():
     return {"ok": True}
 
-@app.get("/version", response_model=VersionInfo)
+@app.get("/version")
 def version():
-    return VersionInfo(
-        service="InmoFlow ML API",
-        version=os.getenv("IMAGE_VERSION", "0.1.0"),
-    )
+    return {"version": "1.0.0"}  # poné el que quieras
+
+@app.post("/match")
+def match_endpoint(payload: dict):
+    # Import perezoso Y relativo: asegura que cargue desde api/ml
+    from .ml.match import run_match  # <-- ajustá al nombre real de tu función
+    return run_match(payload)
