@@ -21,7 +21,8 @@ def version():
 @api_app.post("/match")
 def match_endpoint(payload: dict = Body(...)):
     try:
-        from ml.match import run_match
+        # FIX: import relativo porque match.py está dentro de api/ml/
+        from .ml.match import run_match
     except Exception as e:
         return {"ok": False, "error": f"import_error: {e.__class__.__name__}: {e}"}
     try:
