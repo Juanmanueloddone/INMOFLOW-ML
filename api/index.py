@@ -1,35 +1,37 @@
-# api/index.py
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(root_path="/api")
-
-# CORS abierto para probar; luego lo cerramos a tus dominios
-app.add_middleware(
+# sub-app con tus rutas reales
+api_app = FastAPI()
+api_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.get("/health")
+@api_app.get("/health")
 def health():
     return {"ok": True}
 
-@app.get("/version")
+@api_app.get("/version")
 def version():
     return {"version": "1.0.0"}
 
-@app.post("/match")
+@api_app.post("/match")
 def match_endpoint(payload: dict = Body(...)):
-    # import tardío para evitar problemas de carga
     try:
-        from ml.match import run_match  # <- paquete de raíz, no relativo
+        from ml.match import run_match
     except Exception as e:
-        # devolvemos JSON legible en vez de 500 para no volvernos locos
         return {"ok": False, "error": f"import_error: {e.__class__.__name__}: {e}"}
     try:
-        result = run_match(payload)
-        return result
+        return run_match(payload)
     except Exception as e:
         return {"ok": False, "error": f"runtime_error: {e.__class__.__name__}: {e}"}
+
+# app pública que carga Vercel
+app = FastAPI()
+# 1) sirve bajo /api (cuando Vercel NO recorta)
+app.mount("/api", api_app)
+# 2) y también en raíz (cuando Vercel SÍ recorta)
+app.include_router(api_app.router)
