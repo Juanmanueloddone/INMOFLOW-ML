@@ -1,9 +1,1 @@
-{
-  "version": 2,
-  "builds": [
-    { "src": "api/ml/match.py", "use": "@vercel/python" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "api/ml/match.py" }
-  ]
-}
+{ "version": 2, "routes": [{ "src": "/api/(.*)", "dest": "api/index.py" }] }
