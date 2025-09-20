@@ -2,7 +2,7 @@
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+app = FastAPI(root_path="/api")
 
 # CORS abierto para probar; luego lo cerramos a tus dominios
 app.add_middleware(
