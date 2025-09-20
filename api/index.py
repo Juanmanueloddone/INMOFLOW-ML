@@ -18,6 +18,13 @@ def health():
 def version():
     return {"version": "1.0.0"}
 
+@api_app.get("/match")
+def match_info():
+    return {
+        "ok": True,
+        "message": 'Usá POST /api/match con JSON, p.ej: {"buyers": 2, "top_k": 5}'
+    }
+
 @api_app.post("/match")
 def match_endpoint(payload: dict = Body(...)):
     try:
