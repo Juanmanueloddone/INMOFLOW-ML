@@ -55,24 +55,16 @@ def match_endpoint(payload: MatchRequest = Body(...)):
         }
 
 # --- NUEVA RUTA V2 ---
-@api_app.post("/match/v2", response_model=MatchV2Response)
+@api_app.post("/match/v2")  # <- sacamos response_model=MatchV2Response
 def match_v2_endpoint(payload: MatchV2Request = Body(...)):
     try:
-        from .ml.match import run_match_v2  # api/ml/match.py
+        from .ml.match import run_match_v2
     except Exception as e:
-        return {
-            "ok": False,
-            "results": [],
-            "error": f"import_error: {e.__class__.__name__}: {e}",
-        }
+        return {"ok": False, "results": [], "error": f"import_error: {e.__class__.__name__}: {e}"}
     try:
         return run_match_v2(payload.model_dump())
     except Exception as e:
-        return {
-            "ok": False,
-            "results": [],
-            "error": f"runtime_error: {e.__class__.__name__}: {e}",
-        }
+        return {"ok": False, "results": [], "error": f"runtime_error: {e.__class__.__name__}: {e}"}
 
 # --- app pública que carga Vercel ---
 app = FastAPI()
