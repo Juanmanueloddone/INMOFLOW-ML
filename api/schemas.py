@@ -1,12 +1,13 @@
+# api/schemas.py
+from typing import List, Dict, Any, Optional
+from pydantic import BaseModel, Field
 
-from pydantic import BaseModel
-from typing import List, Any, Dict
-
+# -------- V1 --------
 class MatchRequest(BaseModel):
-    buyers: int = 1
-    top_k: int = 10
+    buyers: int = Field(1, ge=1, le=1000)
+    top_k: int = Field(10, ge=1, le=1000)
 
-class BuyerMatch(BaseModel):
+class MatchItem(BaseModel):
     buyer_id: int
     matches: List[Dict[str, Any]] = []
 
@@ -14,43 +15,26 @@ class MatchResponse(BaseModel):
     ok: bool
     buyers: int
     top_k: int
-    results: List[BuyerMatch]
+    results: List[MatchItem]
+    error: Optional[str] = None
 
-from typing import List, Optional
-from pydantic import BaseModel, Field
-
-class Buyer(BaseModel):
-    id: str
+# -------- V2 --------
+class BuyerProfile(BaseModel):
+    id: int
     budget_min: Optional[float] = None
     budget_max: Optional[float] = None
-    rooms_min: Optional[int] = None
     city: Optional[str] = None
-    neighborhoods: List[str] = []
-    must_haves: List[str] = []  # tags / amenities (ej: "balcon", "cochera")
-
-class Listing(BaseModel):
-    id: str
-    price: float
-    rooms: Optional[int] = None
-    city: Optional[str] = None
-    neighborhoods: List[str] = []
-    features: List[str] = []    # tags / amenities
-    vector: Optional[List[float]] = None  # opcional si más adelante precomputás embeddings
-
-class MatchItem(BaseModel):
-    listing_id: str
-    score: float
-
-class BuyerResult(BaseModel):
-    buyer_id: str
-    matches: List[MatchItem]
+    features: Dict[str, Any] = {}
 
 class MatchV2Request(BaseModel):
-    buyers: List[Buyer]
-    candidates: List[Listing]
-    top_k: int = Field(default=10, ge=1, le=100)
+    buyers: List[BuyerProfile]
+    top_k: int = Field(10, ge=1, le=1000)
+
+class MatchV2Result(BaseModel):
+    buyer_id: int
+    matches: List[Dict[str, Any]] = []
 
 class MatchV2Response(BaseModel):
     ok: bool
-    results: List[BuyerResult]
-
+    results: List[MatchV2Result]
+    error: Optional[str] = None
