@@ -1,13 +1,17 @@
+
 # api/index.py
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
-from .schemas import MatchRequest, MatchResponse  # <-- modelos pydantic
+from .schemas import (
+    MatchRequest, MatchResponse,
+    MatchV2Request, MatchV2Response,   # <-- v2
+)
 
 # --- sub-app con rutas reales (la que expone /api) ---
 api_app = FastAPI()
 api_app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # abrimos para probar; luego limitá a tus dominios
+    allow_origins=["*"],   # abrir para probar; luego limitá a tus dominios
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -29,7 +33,6 @@ def match_info():
 
 @api_app.post("/match", response_model=MatchResponse)
 def match_endpoint(payload: MatchRequest = Body(...)):
-    # import tardío para evitar problemas de carga
     try:
         from .ml.match import run_match  # api/ml/match.py
     except Exception as e:
@@ -41,13 +44,32 @@ def match_endpoint(payload: MatchRequest = Body(...)):
             "error": f"import_error: {e.__class__.__name__}: {e}",
         }
     try:
-        # run_match debe devolver un dict con la forma de MatchResponse
         return run_match(payload.model_dump())
     except Exception as e:
         return {
             "ok": False,
             "buyers": payload.buyers,
             "top_k": payload.top_k,
+            "results": [],
+            "error": f"runtime_error: {e.__class__.__name__}: {e}",
+        }
+
+# --- NUEVA RUTA V2 ---
+@api_app.post("/match/v2", response_model=MatchV2Response)
+def match_v2_endpoint(payload: MatchV2Request = Body(...)):
+    try:
+        from .ml.match import run_match_v2  # api/ml/match.py
+    except Exception as e:
+        return {
+            "ok": False,
+            "results": [],
+            "error": f"import_error: {e.__class__.__name__}: {e}",
+        }
+    try:
+        return run_match_v2(payload.model_dump())
+    except Exception as e:
+        return {
+            "ok": False,
             "results": [],
             "error": f"runtime_error: {e.__class__.__name__}: {e}",
         }
