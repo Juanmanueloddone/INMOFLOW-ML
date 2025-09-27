@@ -31,18 +31,20 @@ def match_info():
         "message": 'Usá POST /api/match con JSON, p.ej: {"buyers": 2, "top_k": 5}',
     }
 
-@api_app.post("/match", response_model=MatchResponse)
-def match_endpoint(payload: MatchRequest = Body(...)):
+# --- NUEVA RUTA V2 ---
+@api_app.post("/match/v2", response_model=MatchV2Response)
+def match_v2_endpoint(payload: MatchV2Request = Body(...)):
     try:
-        from .ml.match import run_match  # api/ml/match.py
+        from .ml.match import run_match_v2
     except Exception as e:
-        return {
-            "ok": False,
-            "buyers": payload.buyers,
-            "top_k": payload.top_k,
-            "results": [],
-            "error": f"import_error: {e.__class__.__name__}: {e}",
-        }
+        return {"ok": False, "results": [], "error": f"import_error: {e.__class__.__name__}: {e}"}
+
+    try:
+        # OJO: sin .model_dump()
+        return run_match_v2(payload)
+    except Exception as e:
+        return {"ok": False, "results": [], "error": f"runtime_error: {e.__class__.__name__}: {e}"}
+
     try:
         return run_match(payload.model_dump())
     except Exception as e:
