@@ -32,6 +32,11 @@ jobs:
             exit 1
           fi
           echo "✅ DATABASE_URL presente (prefijo): ${DATABASE_URL%%:*}"
+- name: Check DB URL points to pooler (no leaks)
+  run: |
+    echo "$DATABASE_URL" | grep -q "pooler.supabase.com:6543" \
+      && echo "OK: usando pooler:6543" \
+      || (echo "ERROR: el secret no apunta al pooler:6543"; exit 1)
 
       - name: Run ML7 baseline
         run: python ml/baseline_ml7.py
