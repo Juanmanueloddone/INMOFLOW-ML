@@ -2,13 +2,14 @@ name: ML7 Baseline
 
 on:
   workflow_dispatch:
-  # opcional: corre todos los días a las 02:00 UTC
-  schedule:
-    - cron: "0 2 * * *"
 
 jobs:
   run-baseline:
     runs-on: ubuntu-latest
+    env:                              # ← toma el secret y lo expone como env
+      DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+      WRITE_TO_SHADOW: "false"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,9 +25,13 @@ jobs:
           pip install -r requirements.txt
           pip install "sqlalchemy==2.0.32" "psycopg2-binary==2.9.9" "scikit-learn==1.5.1" "pandas==2.2.2"
 
-      - name: Run ML7 baseline
-        env:
-          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
-          WRITE_TO_SHADOW: "false"   # poné "true" si querés copiar a match_model_scores (shadow)
+      - name: Assert DATABASE_URL (fail fast si falta)
         run: |
-          python ml/baseline_ml7.py
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "❌ DATABASE_URL vacío. Cargá el secret SUPABASE_DB_URL en Settings → Secrets → Actions."
+            exit 1
+          fi
+          echo "✅ DATABASE_URL presente (prefijo): ${DATABASE_URL%%:*}"
+
+      - name: Run ML7 baseline
+        run: python ml/baseline_ml7.py
