@@ -1,8 +1,8 @@
 name: ML7 Baseline
 
 on:
-  workflow_dispatch: {}
-  # (opcional) corre todos los días a las 02:00 UTC
+  workflow_dispatch:
+  # opcional: corre todos los días a las 02:00 UTC
   schedule:
     - cron: "0 2 * * *"
 
@@ -22,10 +22,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install "sqlalchemy==2.0.32" "psycopg2-binary==2.9.9" "scikit-learn==1.5.1" "pandas==2.2.2"
 
       - name: Run ML7 baseline
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
-          WRITE_TO_SHADOW: "false"   # poné "true" si querés que copie a match_model_scores
+          WRITE_TO_SHADOW: "false"   # poné "true" si querés copiar a match_model_scores (shadow)
         run: |
           python ml/baseline_ml7.py
